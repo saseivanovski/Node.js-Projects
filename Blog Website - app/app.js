@@ -1,6 +1,17 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const _ = require("lodash");
+const mongoose = require("mongoose");
+
+const postSchema = {
+  title: String,
+  post: String,
+};
+const Post = mongoose.model("Post", postSchema);
+
+mongoose.connect(
+  "mongodb+srv://sase:sase@atlascluster.op70typ.mongodb.net/test"
+);
 
 const homeStartingContent =
   "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.";
@@ -8,7 +19,6 @@ const aboutContent =
   "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.";
 const contactContent =
   "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.";
-const posts = [];
 
 const app = express();
 
@@ -18,9 +28,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 app.get("/", function (req, res) {
-  res.render("home", {
-    homeStartingContent: homeStartingContent,
-    posts: posts,
+  Post.find({}, function (err, posts) {
+    res.render("home", {
+      homeStartingContent: homeStartingContent,
+      posts: posts,
+    });
   });
 });
 app.get("/about", function (req, res) {
@@ -34,19 +46,29 @@ app.get("/compose", function (req, res) {
   res.render("compose");
 });
 app.post("/compose", function (req, res) {
-  const compose = {
+  const post = new Post({
     title: req.body.composeTitle,
     post: req.body.composePost,
-  };
-  posts.push(compose);
-  res.redirect("/");
+  });
+  post.save(function (err) {
+    if (!err) {
+      res.redirect("/");
+    }
+  });
 });
 
-app.get("/posts/:postName", function (req, res) {
-  const postName = req.params.postName;
-  posts.forEach(function (post) {
-    if (_.lowerCase(postName) === _.lowerCase(post.title)) {
-      res.render("post", { post: post });
+app.get("/posts/:postId", function (req, res) {
+  const postId = req.params.postId;
+  Post.findOne({ _id: postId }, function (err, post) {
+    res.render("post", { title: post.title, post: post.post });
+  });
+});
+
+app.post("/delete", function (req, res) {
+  const deleteById = req.body.button;
+  Post.findByIdAndRemove(deleteById, function (err) {
+    if (!err) {
+      res.redirect("/");
     }
   });
 });

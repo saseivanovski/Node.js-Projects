@@ -8,7 +8,10 @@
   <h1><%=post.title%></h1>
   <p>
     <%=post.post.substring(0, 100) + " ..."%>
-    <a href="/posts/<%=post.title%>">Read More</a>
+    <a href="/posts/<%=post._id%>">Read More</a>
+    <form class="" action="/delete" method="post">
+      <button type="submit" class="btn btn-lng" name="button" value="<%= post._id%>">Delete</button>
+    </form>
   </p>
   <% }) %>
 </div>
